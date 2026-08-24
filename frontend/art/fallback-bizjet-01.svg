@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="Geschaeftsreiseflugzeug">
+  <g fill="#f2ece1" stroke="none">
+    <path d="M 1000.0,216.0 C 976.0,190.0 934.0,186.0 890.0,186.0 L 410.0,186.0 C 360.0,186.0 326.0,174.0 306.0,140.0 L 280.0,132.0 L 298.0,182.0 C 310.0,220.0 350.0,246.0 400.0,246.0 L 890.0,246.0 C 940.0,246.0 980.0,236.0 1000.0,216.0 Z"/>
+    <path d="M 400.0,186.0 L 364.0,46.0 L 318.0,46.0 L 306.0,142.0 Z"/>
+    <rect x="246" y="32" width="230" height="18" rx="8"/>
+    <rect x="400" y="180" width="150" height="58" rx="28"/>
+    <path d="M 616.0,238.0 L 366.0,302.0 L 276.0,302.0 L 516.0,236.0 Z" opacity="0.92"/>
+    <circle cx="460" cy="214" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="512" cy="214" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="564" cy="214" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="616" cy="214" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="668" cy="214" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="720" cy="214" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="772" cy="214" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="824" cy="214" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <path d="M 904.0,196.0 L 962.0,200.0 L 974.0,208.0 L 904.0,204.0 Z" fill="#d9cdb8" opacity="0.75"/>
+  </g>
+</svg>

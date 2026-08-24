@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" role="img" aria-label="Turboprop">
+  <g fill="#f2ece1" stroke="none">
+    <path d="M 1010.0,213.0 C 984.0,182.0 940.0,176.0 890.0,176.0 L 390.0,176.0 C 330.0,176.0 292.0,162.0 270.0,120.0 L 240.0,110.0 L 260.0,170.0 C 274.0,216.0 320.0,250.0 380.0,250.0 L 890.0,250.0 C 944.0,250.0 988.0,239.0 1010.0,213.0 Z"/>
+    <path d="M 380.0,176.0 L 336.0,26.0 L 284.0,26.0 L 270.0,124.0 Z"/>
+    <rect x="210" y="12" width="220" height="20" rx="9"/>
+    <path d="M 593.0,180.0 L 463.0,150.0 L 193.0,150.0 L 363.0,182.0 Z"/>
+    <rect x="363" y="136" width="190" height="46" rx="22"/>
+    <rect x="549" y="80" width="11" height="158" rx="5" opacity="0.55"/>
+    <path d="M 403.0,246.0 q 60,0 60,42 l -120,0 q 0,-42 60,-42 Z" opacity="0.9"/>
+    <circle cx="430" cy="209" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="474" cy="209" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="518" cy="209" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="562" cy="209" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="606" cy="209" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="650" cy="209" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="694" cy="209" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="738" cy="209" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="782" cy="209" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <circle cx="826" cy="209" r="6" fill="#d9cdb8" opacity="0.55"/>
+    <path d="M 906.0,188.0 L 970.0,192.0 L 982.0,203.0 L 906.0,199.0 Z" fill="#d9cdb8" opacity="0.75"/>
+  </g>
+</svg>

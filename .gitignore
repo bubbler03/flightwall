@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.DS_Store
+.idea/
+.venv/
+venv/
+config.yaml
+data/
+art_staging/
+frontend/art/*.png
+frontend/art/*.jpg
+frontend/art/*.webp
+!frontend/art/.gitkeep
+!frontend/art/display/
+!frontend/art/display/*.png

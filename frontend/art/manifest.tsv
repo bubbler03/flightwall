@@ -1,0 +1,23 @@
+file	family	operator	operator_aliases	type_codes	primary_reference	master_size	status
+a220--airbaltic-01.png	a220	airBaltic	Air Baltic|airBaltic	BCS1|BCS3|A220	airbaltic-a220-reference.png	1672x941	integrated
+a319--lufthansa-01.png	a319	Lufthansa	Lufthansa	A318|A319|A19N	lufthansa-a320neo-reference.jpg	1672x941	integrated
+a320--lufthansa-01.png	a320	Lufthansa	Lufthansa	A320|A20N	lufthansa-a320neo-reference.jpg	1672x941	integrated
+a321--lufthansa-01.png	a321	Lufthansa	Lufthansa	A321|A21N	lufthansa-a321neo-reference.jpg	1672x941	integrated
+a330--turkmenistan-cargo-01.png	a330	Turkmenistan Airlines Cargo	Turkmenistan Airlines Cargo|Turkmenistan Airlines	A332|A333|A338|A339|A330|A33X	turkmenistan-a330-reference.jpg	1672x941	integrated
+a350--lufthansa-01.png	a350	Lufthansa	Lufthansa	A359|A35K|A350	lufthansa-a350-reference.jpg	1672x941	integrated
+a380--emirates-01.png	a380	Emirates	Emirates	A388|A380	emirates-a380-reference.jpg	1672x941	integrated
+a380--lufthansa-01.png	a380	Lufthansa	Lufthansa	A388|A380	lufthansa-a380-reference.jpg	1672x941	integrated
+at72--dat-01.png	at72	DAT Danish Air Transport	DAT Danish Air Transport|Danish Air Transport|DAT	AT43|AT44|AT45|AT46|AT72|AT73|AT75|AT76|ATR	dat-atr72-reference.jpg	1672x941	integrated
+b38m--ryanair-01.png	b38m	Ryanair	Ryanair	B37M|B38M|B39M|B3XM	ryanair-b737max-reference.jpg	1672x941	integrated
+b738--jet2-01.png	b738	Jet2.com	Jet2.com|Jet2	B736|B737|B738|B739|B73H	jet2-b737-800-reference.jpg	1672x941	integrated
+b747--atlas-air-01.png	b747	Atlas Air	Atlas Air	B741|B742|B743|B744|B748|B74F|B747	atlas-air-747-8f-reference.png	1672x941	integrated
+b747--cathay-cargo-01.png	b747	Cathay Pacific Cargo	Cathay Pacific Cargo|Cathay Cargo	B741|B742|B743|B744|B748|B74F|B747	cathay-cargo-747-8f-reference.png	1672x941	integrated
+b767--air-astana-01.png	b767	Air Astana	Air Astana	B762|B763|B764|B767	air-astana-b767-reference.jpg	1672x941	integrated
+b777--aerologic-01.png	b777	AeroLogic	AeroLogic	B772|B773|B77L|B77W|B778|B779|B777	aerologic-b777f-reference.jpg	1672x941	integrated
+b777--cathay-pacific-01.png	b777	Cathay Pacific	Cathay Pacific|Cathay Pacific Airways	B772|B773|B77L|B77W|B778|B779|B777	model knowledge; Cathay cargo palette cross-check	1672x941	integrated
+b777--thai-airways-01.png	b777	Thai Airways	Thai Airways International|Thai Airways	B772|B773|B77L|B77W|B778|B779|B777	thai-b777-reference.jpg	1672x941	integrated
+b787--air-canada-01.png	b787	Air Canada	Air Canada	B788|B789|B78X|B787	Official Air Canada livery guide; web validation	1672x941	integrated
+b787--virgin-atlantic-01.png	b787	Virgin Atlantic	Virgin Atlantic Airways|Virgin Atlantic	B788|B789|B78X|B787	model knowledge	1672x941	integrated
+e175--klm-cityhopper-01.png	e175	KLM Cityhopper	KLM Royal Dutch Airlines|KLM Cityhopper|KLM	E170|E175|E75L|E75S|E70	klm-e175-reference.png	1672x941	integrated
+e190--klm-cityhopper-01.png	e190	KLM Cityhopper	KLM Royal Dutch Airlines|KLM Cityhopper|KLM	E190|E195|E290|E295|E90|E95	klm-e195e2-reference.png	1672x941	integrated
+e190--lot-polish-01.png	e190	LOT Polish Airlines	LOT Polish Airlines|LOT	E190|E195|E290|E295|E90|E95	lot-e195-reference.jpg	1672x941	integrated

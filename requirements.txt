@@ -1,0 +1,9 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+httpx==0.28.1
+curl_cffi==0.16.1        # Yahoo blockt Standard-Python-Clients (TLS-Fingerabdruck)
+PyYAML==6.0.2
+feedparser==6.0.11
+anthropic==0.42.0          # optional: nur fuer die KI-Zusammenfassung im Markt-Agent
+# gpiozero==2.0.1          # nur auf dem Pi (Hardware-Knopf)
+# lgpio==0.2.2.0           # nur auf dem Pi 5 (gpiozero-Backend)

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>FlightWall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css?v=20260824-2">
+</head>
+<body class="view-flight">
+
+<!-- Rahmen und Signet: das Display als gerahmter Druck -->
+<div class="frame" aria-hidden="true"></div>
+<div class="wordmark" aria-hidden="true"><span class="wordmark-glyph">✈</span> FlightWall</div>
+
+<!-- ======================= FLUG-ANSICHT (Screensaver) ==================== -->
+<main id="flight-view" class="view">
+  <div class="poster">
+    <header class="poster-head">
+      <div class="operator-line">
+        <span class="rule" aria-hidden="true"></span>
+        <div class="operator" id="operator">Warte auf Flugzeug…</div>
+        <span class="rule" aria-hidden="true"></span>
+      </div>
+      <div class="route" id="route">
+        <span class="airport" id="origin">—</span>
+        <span class="route-line"><i></i><svg viewBox="0 0 24 24" class="plane-glyph" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg><i></i></span>
+        <span class="airport" id="destination">—</span>
+      </div>
+    </header>
+
+    <section class="artwork-stage">
+      <img id="artwork" class="artwork" alt="" hidden>
+      <div id="artwork-placeholder" class="artwork-placeholder">
+        <span class="placeholder-type" id="placeholder-type">✈</span>
+        <span class="placeholder-note" id="placeholder-note">noch kein Bild hinterlegt</span>
+      </div>
+      <div id="fleet-stack" class="fleet-stack"></div>
+      <span class="stage-caption left" id="stage-caption">Fig. 01 — Himmel über dir</span>
+      <span class="stage-caption right" aria-hidden="true">Radar · Live</span>
+    </section>
+
+    <footer class="poster-foot">
+      <div class="title-row">
+        <h1 class="aircraft-title" id="aircraft-title">Kein Flugzeug in Reichweite</h1>
+        <div class="reg-block"><span class="reg-mark" aria-hidden="true">Nº</span><span class="registration" id="registration"></span></div>
+      </div>
+      <dl class="specs">
+        <div class="spec"><dt>Höhe</dt><dd id="spec-altitude">—</dd></div>
+        <div class="spec"><dt>Entfernung</dt><dd id="spec-distance">—</dd></div>
+        <div class="spec"><dt>Richtung</dt><dd id="spec-bearing">—</dd></div>
+        <div class="spec"><dt>Tempo</dt><dd id="spec-speed">—</dd></div>
+        <div class="spec"><dt>Status</dt><dd id="spec-state">—</dd></div>
+      </dl>
+    </footer>
+  </div>
+</main>
+
+<!-- ========================= AKTIEN-ANSICHT ============================= -->
+<main id="stocks-view" class="view">
+  <header class="stocks-head">
+    <h2>Marktbewegung</h2>
+    <div class="market-meta">
+      <span id="market-state" class="badge">—</span>
+      <span id="market-updated" class="muted">—</span>
+    </div>
+  </header>
+
+  <section id="alert-panel" class="alert-panel" hidden>
+    <div class="alert-mark" id="alert-mark">▲</div>
+    <div class="alert-body">
+      <div class="alert-symbol"><span id="alert-symbol">—</span><span id="alert-change" class="alert-change">—</span></div>
+      <div class="alert-name" id="alert-name">—</div>
+      <p class="alert-explanation" id="alert-explanation">—</p>
+      <div class="alert-meta">
+        <span id="alert-driver" class="chip">—</span>
+        <span id="alert-confidence" class="chip chip-quiet">—</span>
+        <span id="alert-source" class="chip chip-quiet">—</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="movers">
+    <ul id="movers-list" class="movers-list"><li class="empty">Lade Kursdaten…</li></ul>
+  </section>
+
+  <footer class="watchlist-bar">
+    <ul id="watchlist" class="watchlist"></ul>
+  </footer>
+</main>
+
+<!-- =========================== Hinweise ================================= -->
+<div class="corner-info">
+  <span id="clock">--:--</span>
+  <span class="dot" aria-hidden="true">·</span>
+  <span id="place">—</span>
+</div>
+<div id="toast" class="toast" hidden></div>
+<div id="connection" class="connection" hidden>Keine Verbindung zum Server</div>
+<div class="night-veil" id="night-veil"></div>
+
+<script src="/js/app.js?v=20260824-2"></script>
+</body>
+</html>

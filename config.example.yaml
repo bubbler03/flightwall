@@ -1,0 +1,91 @@
+# ---------------------------------------------------------------------------
+# FlightWall Konfiguration
+# Kopiere diese Datei nach config.yaml und passe sie an.
+# ---------------------------------------------------------------------------
+
+location:
+  # DEINE Koordinaten - hier stehen aktuell die von Frankfurt.
+  # Findest du z.B. per Rechtsklick in Google Maps -> Koordinaten kopieren.
+  lat: 50.110
+  lon: 8.680
+  label: "Frankfurt"
+  # Suchradius in nautischen Meilen (1 nm = 1.852 km).
+  # 25 nm ~ 46 km. Kleiner = nur wirklich "ueber dir", groesser = immer was da.
+  radius_nm: 50
+
+flights:
+  poll_seconds: 10          # wie oft die ADS-B-API gefragt wird
+  # Bleibt aus Kompatibilitaetsgruenden lesbar; fuer die Dreieransicht werden
+  # bewusst immer die tatsaechlich drei naechsten Kandidaten genommen.
+  switch_hysteresis_km: 2.0
+  # So lange bleibt ein Flugzeug am Schirm, nachdem es ausser Reichweite ist.
+  linger_seconds: 90
+  # Bis zu so viele der naechsten Flugzeuge zeigt das Poster gleichzeitig.
+  max_tracked: 3
+  # Automatisch erweitern, falls der normale Radius nicht drei Kandidaten hat.
+  max_radius_nm: 150
+  radius_step_nm: 25
+  radius_margin_nm: 5
+
+market:
+  poll_seconds: 60
+  # "Groessere Firmen": Mindest-Marktkapitalisierung in USD.
+  min_market_cap: 10_000_000_000     # 10 Mrd.
+  min_volume: 500_000
+  # Ab dieser Tagesbewegung (in Prozent) gilt eine Aktie als auffaellig.
+  move_threshold_pct: 4.0
+  # Ab dieser Bewegung schaltet das Display selbsttaetig vom Flugzeug auf
+  # die Aktien-Ansicht um.
+  alert_threshold_pct: 7.0
+  # Feste Beobachtungsliste - wird zusaetzlich zu den Tagesgewinnern/-verlierern
+  # immer geprueft.
+  watchlist:
+    - AAPL
+    - MSFT
+    - NVDA
+    - GOOGL
+    - AMZN
+    - META
+    - TSLA
+    - AMD
+    - AVGO
+    - NFLX
+    - SAP
+    - ASML
+    - LLY
+    - JPM
+    - XOM
+
+agent:
+  # Optional: Claude fasst zusammen, WARUM sich eine Aktie bewegt.
+  # Ohne Key laeuft alles weiter, nur ohne die KI-Erklaerung.
+  enabled: true
+  # Key entweder hier eintragen oder als Umgebungsvariable ANTHROPIC_API_KEY.
+  anthropic_api_key: ""
+  # Guenstigere Alternativen: claude-sonnet-5, claude-haiku-4-5
+  model: "claude-opus-5"
+  # Wie viele News-Headlines pro Bewegung eingesammelt werden.
+  headlines_per_symbol: 6
+
+display:
+  # Auf welche Ansicht wird nach einem Alert zurueckgefallen.
+  default_view: "flight"
+  # Nach so vielen Sekunden ohne Bedienung geht es zurueck zur Flug-Ansicht.
+  return_to_default_after: 180
+  # Nachtmodus: Display dimmen (nur visuell im Browser).
+  night_dim:
+    enabled: true
+    start_hour: 22
+    end_hour: 7
+    opacity: 0.55
+
+button:
+  # Hardware-Knopf am Pi. Ohne Knopf: Leertaste oder Klick/Tap im Browser.
+  enabled: false
+  gpio_pin: 17
+  # "toggle" = umschalten Flug <-> Aktien, "cycle" = durch alle Ansichten
+  action: "toggle"
+
+server:
+  host: "0.0.0.0"
+  port: 8000

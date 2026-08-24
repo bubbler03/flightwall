@@ -1,0 +1,896 @@
+/* =========================================================================
+   FlightWall - Wanddisplay
+   Anmutung: gerahmter Kunstdruck. Warmes Papier, doppelte Rahmenlinie mit
+   Passkreuzen, Serifen-Plakatschrift, technische Angaben in Monospace.
+   ========================================================================= */
+
+:root {
+  --paper: #f4eee1;
+  --paper-deep: #eae1cf;
+  --ink: #211c15;
+  --ink-soft: #6f6555;
+  --ink-faint: #ab9f8c;
+  --accent: #bd3f26;          /* Zinnober - Posterflaeche */
+  --accent-deep: #8f2e1a;
+  --up: #3c6e4e;
+  --down: #bd3f26;
+  --rule: rgba(33, 28, 21, 0.15);
+  --rule-strong: rgba(33, 28, 21, 0.4);
+
+  --font-display: "Fraunces", Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --pad: clamp(1.6rem, 4vmin, 3.4rem);
+  --frame-inset: clamp(9px, 1.3vmin, 17px);
+  --fade: 900ms;
+}
+
+/* Dunkler Raum, dunkles Bild - schont nachts die Augen */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #16120e;
+    --paper-deep: #1e1913;
+    --ink: #f0e8d8;
+    --ink-soft: #a79c88;
+    --ink-faint: #716759;
+    --accent: #c74e2f;
+    --accent-deep: #9c3720;
+    --rule: rgba(240, 232, 216, 0.17);
+    --rule-strong: rgba(240, 232, 216, 0.36);
+    --up: #5fae80;
+    --down: #d2603f;
+  }
+}
+
+/* Die Flugansicht bleibt ein warmer Papierdruck. Fuer die Nacht ist bereits
+   die zeitgesteuerte Abdunklung vorhanden; der System-Darkmode soll das
+   Passepartout nicht in ein klassisches Dashboard verwandeln. */
+body.view-flight {
+  --paper: #f4eee1;
+  --paper-deep: #e8decb;
+  --ink: #211c15;
+  --ink-soft: #6f6555;
+  --ink-faint: #9b8f7c;
+  --accent: #a53b27;
+  --rule: rgba(33, 28, 21, 0.15);
+  --rule-strong: rgba(33, 28, 21, 0.42);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Klassen mit display:flex wuerden das hidden-Attribut sonst ueberstimmen */
+[hidden] { display: none !important; }
+
+html, body {
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-display);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  cursor: none;                       /* Wanddisplay: kein Mauszeiger */
+}
+
+::selection { background: var(--accent); color: var(--paper); }
+
+body::before {                        /* feine Papierkoernung */
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.16;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.22'/%3E%3C/svg%3E");
+}
+
+/* --- Rahmen: doppelte Linie, Passkreuze, Signet, Standortzeile ----------- */
+.frame {
+  position: fixed;
+  inset: var(--frame-inset);
+  z-index: 55;
+  pointer-events: none;
+  border: 1px solid var(--rule-strong);
+}
+.frame::after {                       /* zweite, feinere Linie */
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--rule);
+}
+.frame::before {                      /* Passkreuze in den vier Ecken */
+  content: "";
+  position: absolute;
+  inset: -10px;
+  background:
+    linear-gradient(var(--ink), var(--ink)) left 10px top 0 / 1px 20px,
+    linear-gradient(var(--ink), var(--ink)) left 0 top 10px / 20px 1px,
+    linear-gradient(var(--ink), var(--ink)) right 10px top 0 / 1px 20px,
+    linear-gradient(var(--ink), var(--ink)) right 0 top 10px / 20px 1px,
+    linear-gradient(var(--ink), var(--ink)) left 10px bottom 0 / 1px 20px,
+    linear-gradient(var(--ink), var(--ink)) left 0 bottom 10px / 20px 1px,
+    linear-gradient(var(--ink), var(--ink)) right 10px bottom 0 / 1px 20px,
+    linear-gradient(var(--ink), var(--ink)) right 0 bottom 10px / 20px 1px;
+  background-repeat: no-repeat;
+  opacity: 0.7;
+}
+
+.wordmark, .corner-info {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 56;
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.28em 1em;
+  background: var(--paper);
+  font-family: var(--font-mono);
+  font-size: clamp(0.6rem, 1.3vmin, 0.95rem);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.wordmark { top: calc(var(--frame-inset) - 0.75em); color: var(--ink); font-weight: 500; }
+.wordmark-glyph { color: var(--accent); }
+.corner-info { bottom: calc(var(--frame-inset) - 0.75em); color: var(--ink-faint); }
+
+/* --- Ansichtswechsel ---------------------------------------------------- */
+.view {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--fade) ease, visibility 0s linear var(--fade);
+}
+body.view-flight #flight-view,
+body.view-stocks #stocks-view {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--fade) ease, visibility 0s;
+}
+
+/* =========================== FLUG-ANSICHT =============================== */
+#flight-view {
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad);
+}
+
+.poster {
+  width: min(100%, 1400px);
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(0.8rem, 2.2vmin, 2.2rem);
+  /* Sanfter Versatz gegen Einbrennen bei Dauerbetrieb */
+  animation: drift 900s ease-in-out infinite alternate;
+}
+@keyframes drift {
+  from { transform: translate(-4px, -3px); }
+  to   { transform: translate(4px, 3px); }
+}
+
+/* --- Kopf: Betreiberzeile und Route ------------------------------------- */
+.poster-head { text-align: center; }
+
+.operator-line {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.9rem, 2.6vmin, 2.4rem);
+  margin-bottom: clamp(0.4rem, 1.4vmin, 1.2rem);
+}
+.operator-line .rule {
+  flex: 1;
+  height: 1px;
+  background: var(--rule-strong);
+}
+.operator {
+  font-family: var(--font-mono);
+  font-size: clamp(0.72rem, 1.8vmin, 1.5rem);
+  font-weight: 400;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.route {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.6rem, 2.2vmin, 2rem);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: clamp(1.9rem, 6vmin, 5rem);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.airport { min-width: 3ch; }
+.route-line {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex: 0 1 clamp(3rem, 15vmin, 13rem);
+  color: var(--accent);
+}
+.route-line i {                       /* gestrichelte Flugbahn */
+  flex: 1;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, currentColor 0 7px, transparent 7px 13px);
+  opacity: 0.6;
+}
+.plane-glyph {
+  width: clamp(1.2rem, 3.2vmin, 2.4rem);
+  height: auto;
+  fill: currentColor;
+  transform: rotate(90deg);
+}
+
+/* --- Buehne fuer das Bild ---------------------------------------------- */
+.artwork-stage {
+  position: relative;
+  display: flex;
+  padding: clamp(1rem, 3.4vmin, 3.4rem);
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  background:
+    radial-gradient(150% 130% at 50% -12%, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0) 70%),
+    var(--accent);
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow:
+    0 clamp(6px, 1.6vmin, 22px) clamp(18px, 4vmin, 60px) rgba(28, 24, 18, 0.25);
+}
+.artwork-stage::before {              /* Passmarken wie auf einer Druckplatte */
+  content: "";
+  position: absolute;
+  inset: clamp(10px, 2vmin, 22px);
+  z-index: 3;
+  pointer-events: none;
+  background:
+    linear-gradient(#fff, #fff) left top / 12px 1px,
+    linear-gradient(#fff, #fff) left top / 1px 12px,
+    linear-gradient(#fff, #fff) right top / 12px 1px,
+    linear-gradient(#fff, #fff) right top / 1px 12px,
+    linear-gradient(#fff, #fff) left bottom / 12px 1px,
+    linear-gradient(#fff, #fff) left bottom / 1px 12px,
+    linear-gradient(#fff, #fff) right bottom / 12px 1px,
+    linear-gradient(#fff, #fff) right bottom / 1px 12px;
+  background-repeat: no-repeat;
+  opacity: 0.55;
+}
+.artwork-stage::after {               /* eingefasste Bildkante */
+  content: "";
+  position: absolute;
+  inset: clamp(6px, 1.2vmin, 13px);
+  z-index: 3;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+}
+
+.stage-caption {
+  position: absolute;
+  bottom: clamp(0.9rem, 2.2vmin, 1.8rem);
+  z-index: 4;
+  font-family: var(--font-mono);
+  font-size: clamp(0.55rem, 1.15vmin, 0.85rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+.stage-caption.left { left: clamp(1.1rem, 2.6vmin, 2.2rem); }
+.stage-caption.right { right: clamp(1.1rem, 2.6vmin, 2.2rem); }
+
+.artwork {
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  animation: reveal var(--fade) ease both;
+}
+.artwork.swap { animation: swap-out 420ms ease both; }
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateX(2.5%) scale(0.995); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes swap-out {
+  to { opacity: 0; transform: translateX(-2.5%); }
+}
+
+/* Leerer Himmel: stilles Radar statt leerer Flaeche */
+.artwork-placeholder {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--paper);
+  text-align: center;
+  padding: 2rem;
+}
+.artwork-placeholder::before {        /* aeusserer Radar-Ring mit Sweep */
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(46vmin, 92%);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: conic-gradient(from 0deg, rgba(255, 255, 255, 0.16), transparent 16%);
+  transform: translate(-50%, -50%);
+  animation: sweep 7s linear infinite;
+}
+.artwork-placeholder::after {         /* innerer Ring */
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(30vmin, 60%);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+}
+@keyframes sweep {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+.placeholder-type, .placeholder-note { position: relative; z-index: 1; }
+.placeholder-type {
+  font-family: var(--font-mono);
+  font-size: clamp(2.2rem, 9vmin, 7.5rem);
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.18);
+}
+.placeholder-note {
+  font-family: var(--font-mono);
+  font-size: clamp(0.62rem, 1.4vmin, 0.95rem);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+/* --- Mehrere Flugzeuge: ruhiges, gerahmtes Katalograster ---------------- */
+.multi-head { display: none !important; } /* entfernt auch alte gecachte Kopfzeilen */
+#flight-view.multi {
+  padding: clamp(2.4rem, 6vmin, 5.2rem) clamp(2rem, 5vw, 5rem);
+}
+#flight-view.multi .poster {
+  width: min(100%, 1500px);
+  grid-template-rows: 1fr;
+  gap: 0;
+}
+#flight-view.multi .poster-head,
+#flight-view.multi .poster-foot,
+#flight-view.multi .stage-caption { display: none; }
+#flight-view.multi .artwork,
+#flight-view.multi .artwork-placeholder { display: none; }
+
+#flight-view.multi .artwork-stage {
+  padding: clamp(1.05rem, 2.4vmin, 2rem);
+  background: var(--paper);
+  border: 1px solid var(--rule-strong);
+  border-radius: 0;
+  box-shadow:
+    0 0 0 clamp(5px, 0.8vmin, 9px) var(--paper-deep),
+    0 0 0 calc(clamp(5px, 0.8vmin, 9px) + 1px) var(--rule-strong),
+    0 18px 55px rgba(28, 24, 18, 0.13);
+}
+#flight-view.multi .artwork-stage::before {
+  inset: clamp(7px, 1vmin, 11px);
+  border: 1px solid var(--rule);
+  background: none;
+  opacity: 1;
+}
+#flight-view.multi .artwork-stage::after { display: none; }
+
+.fleet-stack { display: none; }
+#flight-view.multi .fleet-stack {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(0.35rem, 0.8vmin, 0.7rem) clamp(0.4rem, 1vw, 1rem);
+}
+.band {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(250px, 43%) minmax(0, 57%);
+  align-items: stretch;
+  padding: clamp(0.65rem, 1.5vmin, 1.25rem) clamp(0.8rem, 2vw, 2rem);
+  border-bottom: 1px solid var(--rule-strong);
+  animation: band-in 500ms ease both;
+}
+.band:last-child { border-bottom: 0; }
+@keyframes band-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.band-visual {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-right: clamp(1rem, 3vw, 3rem);
+}
+.band-art {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+.band:not(.is-fallback) .band-art {
+  filter: drop-shadow(0 7px 12px rgba(28, 24, 18, 0.13));
+}
+.band.is-fallback .band-art {
+  max-width: 92%;
+  max-height: 82%;
+  filter: brightness(0.25) sepia(0.18);
+  opacity: 0.82;
+}
+.band-fallback {
+  align-self: center;
+  font-family: var(--font-mono);
+  font-size: clamp(1.6rem, 5vmin, 4rem);
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+.band-caption {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-items: center;
+  padding-left: clamp(1rem, 2.8vw, 2.8rem);
+  border-left: 1px solid var(--rule);
+  color: var(--ink);
+  text-align: left;
+}
+.band-heading {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: clamp(1.7rem, 3vw, 2.8rem) minmax(0, 1fr);
+  gap: clamp(0.55rem, 1.4vw, 1.2rem);
+  align-items: start;
+}
+.band-index {
+  padding-top: 0.24em;
+  font-family: var(--font-mono);
+  font-size: clamp(0.55rem, 1.15vmin, 0.78rem);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+}
+.band-identity { min-width: 0; }
+.band-title {
+  display: block;
+  overflow: hidden;
+  font-size: clamp(1rem, 2.45vmin, 1.9rem);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.band-model {
+  display: block;
+  margin-top: 0.32em;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: clamp(0.55rem, 1.15vmin, 0.82rem);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.band-route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(3.2rem, 6vw, 6.4rem) minmax(0, 1fr);
+  gap: clamp(0.45rem, 1.2vw, 1rem);
+  align-items: center;
+  margin: clamp(0.35rem, 0.8vmin, 0.7rem) 0;
+}
+.route-stop {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.route-stop-destination { align-items: flex-end; text-align: right; }
+.route-label {
+  font-family: var(--font-mono);
+  font-size: clamp(0.5rem, 1vmin, 0.7rem);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.route-code {
+  margin-top: 0.06em;
+  font-family: var(--font-mono);
+  font-size: clamp(1.4rem, 3.8vmin, 2.9rem);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.route-place {
+  display: block;
+  width: 100%;
+  margin-top: 0.25em;
+  overflow: hidden;
+  font-size: clamp(0.64rem, 1.3vmin, 0.92rem);
+  font-weight: 300;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.band-route-line {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--accent);
+}
+.band-route-line i { flex: 1; height: 1px; background: currentColor; opacity: 0.45; }
+.band-route-line b {
+  font-family: var(--font-mono);
+  font-size: clamp(0.8rem, 1.6vmin, 1.2rem);
+  font-weight: 400;
+}
+
+.band-specs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding-top: clamp(0.35rem, 0.75vmin, 0.65rem);
+  border-top: 1px solid var(--rule);
+}
+.band-specs > div { min-width: 0; }
+.band-specs > div + div {
+  padding-left: clamp(0.55rem, 1.3vw, 1.1rem);
+  border-left: 1px solid var(--rule);
+}
+.band-specs dt {
+  font-family: var(--font-mono);
+  font-size: clamp(0.48rem, 0.92vmin, 0.66rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.band-specs dd {
+  margin-top: 0.18em;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: clamp(0.64rem, 1.35vmin, 0.95rem);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (orientation: portrait) {
+  #flight-view.multi { padding-inline: clamp(1.7rem, 5vw, 3rem); }
+  .band { grid-template-columns: minmax(110px, 34%) minmax(0, 66%); }
+  .band-visual { padding-right: clamp(0.6rem, 2vw, 1.2rem); }
+  .band-caption { padding-left: clamp(0.7rem, 2vw, 1.2rem); }
+  .band-route { grid-template-columns: minmax(0, 1fr) 2.4rem minmax(0, 1fr); }
+}
+
+/* --- Fuss: Titel und technische Daten ----------------------------------- */
+.title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding-bottom: 0.55em;
+  border-bottom: 1px solid var(--rule-strong);
+}
+.aircraft-title {
+  font-size: clamp(1.6rem, 4.8vmin, 4.1rem);
+  font-weight: 400;
+  font-optical-sizing: auto;
+  letter-spacing: -0.015em;
+  line-height: 1.04;
+}
+.reg-block {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55em;
+  font-family: var(--font-mono);
+  font-size: clamp(0.85rem, 2.1vmin, 1.7rem);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.reg-mark { color: var(--accent); font-size: 0.72em; font-weight: 500; }
+.registration { color: var(--ink-soft); }
+
+.specs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: clamp(0.5rem, 1.6vmin, 1.5rem);
+  margin-top: clamp(0.5rem, 1.4vmin, 1.2rem);
+}
+.spec { display: flex; flex-direction: column; gap: 0.3em; min-width: 0; }
+.spec + .spec {
+  border-left: 1px solid var(--rule);
+  padding-left: clamp(0.5rem, 1.6vmin, 1.5rem);
+}
+.spec dt {
+  font-family: var(--font-mono);
+  font-size: clamp(0.52rem, 1.2vmin, 0.8rem);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.spec dd {
+  font-family: var(--font-mono);
+  font-size: clamp(0.85rem, 2.3vmin, 1.85rem);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Hochformat: Bild bekommt mehr Luft, Daten rutschen in zwei Reihen */
+@media (orientation: portrait) {
+  .specs { grid-template-columns: repeat(3, 1fr); row-gap: 1.1em; }
+  .spec:nth-child(4) { border-left: none; padding-left: 0; }
+}
+
+/* ========================== AKTIEN-ANSICHT ============================== */
+#stocks-view {
+  padding: var(--pad);
+  gap: clamp(0.8rem, 2vmin, 1.8rem);
+  background: var(--paper);
+}
+
+.stocks-head {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.5em;
+  border-bottom: 2px solid var(--ink);
+  flex: 0 0 auto;
+}
+.stocks-head::after {                 /* Zeitungs-Doppellinie */
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 1px;
+  background: var(--rule-strong);
+}
+.stocks-head h2 {
+  font-size: clamp(1.5rem, 4.4vmin, 3.4rem);
+  font-weight: 400;
+  font-optical-sizing: auto;
+  letter-spacing: -0.015em;
+}
+.market-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.9em;
+  font-family: var(--font-mono);
+  font-size: clamp(0.62rem, 1.4vmin, 1rem);
+}
+.badge {
+  padding: 0.3em 0.8em;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.92em;
+}
+.badge.open { border-color: var(--up); color: var(--up); }
+.muted { color: var(--ink-faint); letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
+
+/* --- Meldung ------------------------------------------------------------ */
+.alert-panel {
+  position: relative;
+  display: flex;
+  gap: clamp(0.9rem, 2.4vmin, 2rem);
+  padding: clamp(1rem, 2.6vmin, 2rem);
+  background:
+    radial-gradient(150% 130% at 50% -12%, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 70%),
+    var(--accent);
+  color: var(--paper);
+  border-radius: 2px;
+  flex: 0 0 auto;
+  animation: alert-in 700ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.alert-panel::after {
+  content: "";
+  position: absolute;
+  inset: clamp(5px, 1vmin, 10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+.alert-panel.negative { background-color: var(--accent-deep); }
+@keyframes alert-in {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: none; }
+}
+.alert-mark {
+  font-size: clamp(1.6rem, 4.5vmin, 3.4rem);
+  line-height: 1;
+  opacity: 0.9;
+}
+.alert-body { min-width: 0; flex: 1; }
+.alert-symbol {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6em;
+  font-family: var(--font-mono);
+  font-size: clamp(1.2rem, 3.4vmin, 2.6rem);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.alert-change { font-size: 0.8em; opacity: 0.92; }
+.alert-name {
+  font-family: var(--font-mono);
+  font-size: clamp(0.68rem, 1.6vmin, 1.15rem);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-top: 0.2em;
+}
+.alert-explanation {
+  margin-top: 0.5em;
+  font-size: clamp(1rem, 2.6vmin, 2rem);
+  line-height: 1.35;
+  font-weight: 300;
+  font-style: italic;
+}
+.alert-meta { display: flex; flex-wrap: wrap; gap: 0.5em; margin-top: 0.75em; }
+.chip {
+  font-family: var(--font-mono);
+  font-size: clamp(0.58rem, 1.3vmin, 0.9rem);
+  padding: 0.3em 0.75em;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  letter-spacing: 0.1em;
+}
+.chip-quiet { background: transparent; border: 1px solid rgba(255, 255, 255, 0.35); opacity: 0.85; }
+
+/* --- Bewegungsliste ----------------------------------------------------- */
+.movers { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.movers-list { list-style: none; height: 100%; display: flex; flex-direction: column; }
+.movers-list li {
+  display: grid;
+  grid-template-columns: minmax(4.5ch, auto) minmax(0, 1fr) minmax(120px, 22%) minmax(7ch, auto);
+  align-items: center;
+  gap: clamp(0.6rem, 2vmin, 1.6rem);
+  padding: clamp(0.35rem, 1.1vmin, 0.9rem) 0;
+  border-bottom: 1px solid var(--rule);
+  flex: 1 1 0;
+  min-height: 0;
+  animation: row-in 500ms ease both;
+}
+@keyframes row-in { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+.movers-list li.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+  border: none;
+}
+.sym {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: clamp(0.95rem, 2.6vmin, 2.1rem);
+  letter-spacing: 0.05em;
+}
+.company {
+  font-size: clamp(0.72rem, 1.7vmin, 1.25rem);
+  font-weight: 300;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+}
+.spark {
+  width: 100%;
+  height: clamp(18px, 4vmin, 42px);
+  display: block;
+  background-image: radial-gradient(circle at 1px 1px, var(--rule) 0.8px, transparent 1.2px);
+  background-size: 8px 8px;
+}
+.spark path {
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.change {
+  font-family: var(--font-mono);
+  font-size: clamp(0.95rem, 2.6vmin, 2.1rem);
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.change.up { color: var(--up); }
+.change.down { color: var(--down); }
+
+/* --- Beobachtungsliste am Fuss ------------------------------------------ */
+.watchlist-bar { flex: 0 0 auto; border-top: 2px solid var(--ink); padding-top: 0.65em; }
+.watchlist {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.7rem, 2.4vmin, 2.2rem);
+  font-family: var(--font-mono);
+  font-size: clamp(0.68rem, 1.7vmin, 1.2rem);
+  font-variant-numeric: tabular-nums;
+}
+.watchlist li { display: flex; gap: 0.5em; align-items: baseline; }
+.watchlist .w-sym { color: var(--ink-soft); letter-spacing: 0.08em; }
+.watchlist .up { color: var(--up); }
+.watchlist .down { color: var(--down); }
+
+/* ============================ Hinweise ================================== */
+.toast, .connection {
+  position: fixed;
+  z-index: 70;
+  font-family: var(--font-mono);
+  font-size: clamp(0.65rem, 1.5vmin, 1rem);
+  letter-spacing: 0.1em;
+  padding: 0.55em 1.1em;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+.toast {
+  left: 50%;
+  bottom: clamp(2.6rem, 6vmin, 4.2rem);
+  transform: translate(-50%, 20px);
+  opacity: 0;
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+.toast.show { opacity: 0.94; transform: translate(-50%, 0); }
+.connection { top: clamp(2.2rem, 5vmin, 3.4rem); left: 50%; transform: translateX(-50%); background: var(--down); }
+
+.night-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 4s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 120ms !important; }
+  .poster { animation: none; }
+}

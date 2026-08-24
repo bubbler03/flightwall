@@ -1,0 +1,26 @@
+# Systemd-Dienst fuer FlightWall
+#   sudo cp deploy/flightwall.service /etc/systemd/system/
+#   sudo systemctl enable --now flightwall
+# Pfade anpassen, falls das Projekt woanders liegt.
+
+[Unit]
+Description=FlightWall - Flugzeug- und Marktdisplay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/flightwall
+Environment="PYTHONUNBUFFERED=1"
+# API-Key fuer die KI-Einordnung - alternativ in config.yaml eintragen
+# Environment="ANTHROPIC_API_KEY=sk-ant-..."
+ExecStart=/home/pi/flightwall/.venv/bin/python run.py
+Restart=always
+RestartSec=5
+# Nach einem Stromausfall kann das Netz noch fehlen: geduldig weiterversuchen
+StartLimitIntervalSec=0
+
+[Install]
+WantedBy=multi-user.target
