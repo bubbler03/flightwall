@@ -11,4 +11,5 @@ fi
 # deaktivieren wir nur den nutzerspezifischen Cache; das LG-Display bestaetigt
 # den gesetzten Zustand weiterhin ueber DDC.
 export HOME="${HOME:-/root}"
-ddcutil --noconfig --disable-dynamic-sleep setvcp D6 05 --display 1
+ddcutil --noconfig --disable-dynamic-sleep --syslog=NEVER \
+    setvcp D6 05 --display 1
