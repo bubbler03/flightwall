@@ -197,7 +197,10 @@ class ArtworkTests(unittest.TestCase):
 
             self.assertEqual(cathay["file"], f"display/{filename}")
             self.assertEqual(cathay["match"], "airline")
-            self.assertEqual(artwork.coverage()["display_cutouts"], 1)
+            coverage = artwork.coverage()
+            self.assertEqual(coverage["display_cutouts"], 1)
+            self.assertEqual(coverage["families_with_art"], 1)
+            self.assertEqual(coverage["files"], 1)
 
 
 class AircraftCatalogTests(unittest.TestCase):

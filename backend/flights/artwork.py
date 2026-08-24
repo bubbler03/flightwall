@@ -217,15 +217,22 @@ class ArtworkIndex:
 
     def coverage(self) -> dict[str, Any]:
         """Welche Familien haben schon ein Bild, welche fehlen noch?"""
-        have = [slug for slug in FAMILIES if self._index.get(slug)]
+        manifest_families = {row.get("family", "") for row in self._manifest}
+        have = [
+            slug for slug in FAMILIES
+            if self._index.get(slug) or slug in manifest_families
+        ]
         missing = [slug for slug in FAMILIES if not self._index.get(slug)]
+        missing = [slug for slug in missing if slug not in manifest_families]
         fallbacks = [f for f in set(CATEGORY_FALLBACK.values()) if self._index.get(f)]
         return {
             "families_total": len(FAMILIES),
             "families_with_art": len(have),
             "missing": missing,
             "fallbacks_present": sorted(fallbacks),
-            "files": sum(len(v) for v in self._index.values()),
+            # Manifest-Dateien koennen als Rohmaster plus Display-Freisteller
+            # vorliegen oder, wie im oeffentlichen Clone, nur als Freisteller.
+            "files": sum(len(v) for v in self._generic_index.values()) + len(self._manifest),
             "airline_pairs": len(self._airline_index),
             "manifest_entries": len(self._manifest),
             "display_cutouts": sum(1 for row in self._manifest if (self.art_dir / "display" / row.get("file", "")).is_file()),
