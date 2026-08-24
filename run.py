@@ -23,6 +23,9 @@ def main() -> None:
         port=CONFIG.server.port,
         log_level="info",
         access_log=False,
+        # Ein dauerhaft offener SSE-Stream (der Kiosk) darf einen manuellen
+        # systemd-Restart nicht unbegrenzt aufhalten.
+        timeout_graceful_shutdown=5,
     )
 
 

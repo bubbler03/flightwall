@@ -7,6 +7,8 @@
 Description=FlightWall - Flugzeug- und Marktdisplay
 After=network-online.target
 Wants=network-online.target
+# Nach einem Stromausfall kann das Netz noch fehlen: geduldig weiterversuchen.
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
@@ -19,8 +21,7 @@ Environment="PYTHONUNBUFFERED=1"
 ExecStart=/home/pi/flightwall/.venv/bin/python run.py
 Restart=always
 RestartSec=5
-# Nach einem Stromausfall kann das Netz noch fehlen: geduldig weiterversuchen
-StartLimitIntervalSec=0
+TimeoutStopSec=10
 
 [Install]
 WantedBy=multi-user.target
