@@ -250,7 +250,7 @@ class FlightService:
         ac["type_name"] = meta.get("type_name")
         ac["manufacturer"] = meta.get("manufacturer")
         ac["operator"] = meta.get("operator")
-        ac.update(route)
+        ac.update(self._validated_route(ac, route))
 
         airline = ac.get("airline") or {}
         route_airline = airline.get("name") if isinstance(airline, dict) else None
@@ -274,11 +274,51 @@ class FlightService:
             ac["art_category"],
             airlines=[route_airline, ac.get("display_operator"), ac.get("operator")],
             seed=ac.get("registration") or ac.get("hex"),
+            type_code=ac.get("type_code"),
         )
         ac["art_url"] = match["url"]
         ac["art_file"] = match["file"]
         ac["art_match"] = match["match"]
         ac["art_operator"] = match["operator"]
+
+    @staticmethod
+    def _validated_route(ac: dict[str, Any], route: dict[str, Any]) -> dict[str, Any]:
+        """Offensichtlich veraltete Callsign-Routen nicht als Fakten anzeigen."""
+        if not route:
+            return {}
+
+        origin = route.get("origin") or {}
+        destination = route.get("destination") or {}
+        try:
+            plausible = geo.route_position_plausible(
+                float(ac["lat"]),
+                float(ac["lon"]),
+                float(origin["lat"]),
+                float(origin["lon"]),
+                float(destination["lat"]),
+                float(destination["lon"]),
+            )
+        except (KeyError, TypeError, ValueError):
+            plausible = False
+
+        if plausible:
+            return {**route, "route_status": "verified"}
+
+        # Die Airline bleibt als vorsichtige Callsign-Einordnung erhalten; die
+        # unplausiblen Flughaefen und die daraus abgeleitete IATA-Flugnummer
+        # werden nicht an UI oder Sichtungsspeicher weitergereicht.
+        cleaned = {"route_status": "unverified"}
+        if route.get("airline"):
+            cleaned["airline"] = route["airline"]
+        log.info(
+            "Unplausible Route ausgeblendet: %s %s -> %s bei %.3f, %.3f",
+            ac.get("callsign"),
+            origin.get("iata") or origin.get("icao") or "?",
+            destination.get("iata") or destination.get("icao") or "?",
+            ac.get("lat", 0),
+            ac.get("lon", 0),
+        )
+        return cleaned
 
     def refresh_artwork(self) -> dict[str, Any]:
         """Manifest neu lesen und bereits sichtbare Flugzeuge sofort zuordnen."""

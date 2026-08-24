@@ -3,7 +3,7 @@
 Ein Wanddisplay für den Raspberry Pi mit zwei Ansichten:
 
 **Flug-Ansicht** (Ruhezustand) — zeigt die Flugzeuge, die gerade am nächsten über dir
-fliegen: als Retro-Poster mit Airline, Route, Höhe, Entfernung und Richtung. Sind
+fliegen: als Retro-Poster mit Airline, Route, Höhe, Entfernung und Peilung. Sind
 mehrere gleichzeitig unterwegs, stapelt das Poster bis zu drei davon untereinander,
 jeweils mit eigener Bildunterschrift.
 
@@ -79,7 +79,9 @@ Ablauf für neue Motive:
 1. `GET /api/flight/models` zeigt dauerhaft gespeicherte Modell/Airline-Paare;
    `needs_artwork: 1` ist die Arbeitsliste für die nächsten Bilder.
 2. Bild als `<familie>--<airline>-01.png` in `frontend/art/` legen und eine Zeile
-   mit Airline-Aliases in `frontend/art/manifest.tsv` ergänzen.
+   mit Airline-Aliases sowie den tatsächlich passenden ICAO-Typcodes in
+   `frontend/art/manifest.tsv` ergänzen. Ein A321neo-Motiv mit `A21N` wird so
+   nicht versehentlich für einen A321ceo gezeigt.
 3. `curl -X POST localhost:8000/api/art/refresh` aufrufen. Die sichtbaren
    Flugzeuge werden ohne Neustart sofort neu zugeordnet.
 
@@ -96,6 +98,8 @@ geschoben. Neue Masters lassen sich reproduzierbar freistellen:
 
 Das Skript entfernt ausschließlich die vom Bildrand zusammenhängende rote Fläche,
 schneidet transparente Ränder zu und bewahrt Lackierung, Logos und Retro-Raster.
+Für bereits transparent extrahierte Motive mit roter/oranger Lackierung bereinigt
+und beschneidet `--preserve-alpha` nur den vorhandenen Alphakanal.
 
 ---
 

@@ -41,3 +41,45 @@ def compass_point(bearing: float) -> str:
     points = ["N", "NNO", "NO", "ONO", "O", "OSO", "SO", "SSO",
               "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
     return points[int((bearing + 11.25) % 360 // 22.5)]
+
+
+def route_position_plausible(
+    aircraft_lat: float,
+    aircraft_lon: float,
+    origin_lat: float,
+    origin_lon: float,
+    destination_lat: float,
+    destination_lon: float,
+) -> bool:
+    """Ob die aktuelle Position glaubhaft zwischen Start und Ziel liegt.
+
+    Externe Callsign-Datenbanken koennen eine alte Route fuer ein inzwischen
+    neu vergebenes Callsign liefern. Wir akzeptieren deshalb einen grosszuegigen
+    350-km-Korridor um die Grosskreisroute, verhindern mit dem Umweg-Test aber
+    auch Treffer weit vor dem Start oder hinter dem Ziel.
+    """
+    direct_km = haversine_km(origin_lat, origin_lon, destination_lat, destination_lon)
+    origin_to_aircraft = haversine_km(origin_lat, origin_lon, aircraft_lat, aircraft_lon)
+    aircraft_to_destination = haversine_km(
+        aircraft_lat, aircraft_lon, destination_lat, destination_lon
+    )
+
+    if direct_km < 10:
+        return min(origin_to_aircraft, aircraft_to_destination) <= 100
+
+    angular_distance = origin_to_aircraft / EARTH_RADIUS_KM
+    route_bearing = math.radians(
+        bearing_deg(origin_lat, origin_lon, destination_lat, destination_lon)
+    )
+    aircraft_bearing = math.radians(
+        bearing_deg(origin_lat, origin_lon, aircraft_lat, aircraft_lon)
+    )
+    cross_track = abs(
+        math.asin(
+            max(-1.0, min(1.0, math.sin(angular_distance) * math.sin(aircraft_bearing - route_bearing)))
+        )
+        * EARTH_RADIUS_KM
+    )
+    extra_km = origin_to_aircraft + aircraft_to_destination - direct_km
+    allowed_extra = min(500.0, max(200.0, direct_km * 0.25))
+    return cross_track <= 350.0 and extra_km <= allowed_extra

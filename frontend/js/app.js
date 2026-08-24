@@ -89,7 +89,7 @@
             <dl class="band-specs">
               <div><dt>Höhe</dt><dd class="band-altitude"></dd></div>
               <div><dt>Entfernung</dt><dd class="band-distance"></dd></div>
-              <div><dt>Richtung</dt><dd class="band-direction"></dd></div>
+              <div><dt>Peilung</dt><dd class="band-direction"></dd></div>
             </dl>
           </figcaption>`;
         stack.appendChild(band);
@@ -105,8 +105,9 @@
     const destination = f.destination || {};
     const originCode = origin.iata || origin.icao || "—";
     const destinationCode = destination.iata || destination.icao || "—";
-    const originPlace = origin.city || origin.municipality || origin.name || "Nicht verfügbar";
-    const destinationPlace = destination.city || destination.municipality || destination.name || "Nicht verfügbar";
+    const unavailable = f.route_status === "unverified" ? "Nicht verifiziert" : "Nicht verfügbar";
+    const originPlace = origin.city || origin.municipality || origin.name || unavailable;
+    const destinationPlace = destination.city || destination.municipality || destination.name || unavailable;
     const meters = feetToMeters(f.altitude_ft);
 
     band.querySelector(".band-index").textContent = String(index + 1).padStart(2, "0");
@@ -160,13 +161,15 @@
     const destination = flight.destination?.iata || flight.destination?.icao;
     $("origin").textContent = origin || "—";
     $("destination").textContent = destination || "—";
-    $("route").title = [flight.origin?.city, flight.destination?.city].filter(Boolean).join(" → ");
+    $("route").title = flight.route_status === "unverified"
+      ? "Route nicht verifiziert"
+      : [flight.origin?.city, flight.destination?.city].filter(Boolean).join(" → ");
 
     const meters = feetToMeters(flight.altitude_ft);
     $("spec-altitude").textContent = meters ? `${nf(meters)} m` : "—";
     $("spec-distance").textContent = flight.distance_km != null ? `${nf(flight.distance_km, 1)} km` : "—";
     $("spec-bearing").textContent = flight.compass
-      ? `${flight.compass} ${nf(flight.elevation_deg, 0)}°`
+      ? `${flight.compass} · ${nf(flight.bearing_deg, 0)}°`
       : "—";
     const kmh = knotsToKmh(flight.ground_speed_kt);
     $("spec-speed").textContent = kmh ? `${nf(kmh)} km/h` : "—";

@@ -67,20 +67,32 @@ def keep_aircraft_component(alpha: Image.Image) -> Image.Image:
     return Image.composite(alpha, Image.new("L", alpha.size), component)
 
 
-def make_cutout(source: Path, destination: Path, threshold: int = 72) -> None:
+def make_cutout(
+    source: Path,
+    destination: Path,
+    threshold: int = 72,
+    preserve_alpha: bool = False,
+) -> None:
     original = Image.open(source).convert("RGBA")
     work = original.copy()
-    draw = ImageDraw.Draw(work)
 
-    # Mehrere Randpunkte fangen auch leichte Farbverlaeufe und Papierkoernung
-    # ein. Floodfill entfernt nur zusammenhaengende Flaechen und greift daher
-    # keine roten Details an, die innerhalb des Flugzeugs liegen.
-    for seed in edge_seeds(*work.size):
-        pixel = work.getpixel(seed)
-        if pixel[3] and looks_like_backdrop(pixel):
-            ImageDraw.floodfill(work, seed, (0, 0, 0, 0), thresh=threshold)
+    if preserve_alpha:
+        # ImageGen kann bereits echte Transparenz liefern. Dann nur lose
+        # Extraktionspixel entfernen und eng zuschneiden, ohne rote/orange
+        # Lackierungen erneut gegen den roten Master-Hintergrund zu testen.
+        alpha = keep_aircraft_component(work.getchannel("A"))
+    else:
+        draw = ImageDraw.Draw(work)
 
-    alpha = keep_aircraft_component(work.getchannel("A"))
+        # Mehrere Randpunkte fangen auch leichte Farbverlaeufe und Papierkoernung
+        # ein. Floodfill entfernt nur zusammenhaengende Flaechen und greift daher
+        # keine roten Details an, die innerhalb des Flugzeugs liegen.
+        for seed in edge_seeds(*work.size):
+            pixel = work.getpixel(seed)
+            if pixel[3] and looks_like_backdrop(pixel):
+                ImageDraw.floodfill(work, seed, (0, 0, 0, 0), thresh=threshold)
+
+        alpha = keep_aircraft_component(work.getchannel("A"))
     # Ein sehr kleiner weicher Rand verhindert gezackte Kanten im Passepartout,
     # ohne feine Antennen oder Leitwerkskanten sichtbar zu verbreitern.
     alpha = alpha.filter(ImageFilter.GaussianBlur(0.35))
@@ -108,6 +120,11 @@ def parse_args() -> argparse.Namespace:
     group.add_argument("--all", action="store_true", help="alle Airline-PNGs verarbeiten")
     parser.add_argument("--output", type=Path, help="Ausgabedatei bei --input")
     parser.add_argument("--threshold", type=int, default=72, help="Farbtoleranz fuer den Hintergrund")
+    parser.add_argument(
+        "--preserve-alpha",
+        action="store_true",
+        help="vorhandene Transparenz bereinigen und zuschneiden, Hintergrund nicht neu entfernen",
+    )
     return parser.parse_args()
 
 
@@ -123,7 +140,7 @@ def main() -> None:
 
     source = args.input.resolve()
     destination = args.output or (DISPLAY_DIR / source.name)
-    make_cutout(source, destination.resolve(), args.threshold)
+    make_cutout(source, destination.resolve(), args.threshold, args.preserve_alpha)
     print(destination)
 
 

@@ -111,6 +111,7 @@ class ArtworkIndex:
         self._generic_index: dict[str, list[str]] = {}
         self._airline_index: dict[tuple[str, str], list[str]] = {}
         self._file_operators: dict[str, str] = {}
+        self._file_type_codes: dict[str, set[str]] = {}
         self._manifest: list[dict[str, str]] = []
         self.refresh()
 
@@ -118,6 +119,7 @@ class ArtworkIndex:
         index: dict[str, list[str]] = {}
         airline_index: dict[tuple[str, str], list[str]] = {}
         file_operators: dict[str, str] = {}
+        file_type_codes: dict[str, set[str]] = {}
         manifest: list[dict[str, str]] = []
         if self.art_dir.is_dir():
             for path in sorted(self.art_dir.iterdir()):
@@ -145,12 +147,18 @@ class ArtworkIndex:
                             continue
                         served_filename = f"display/{filename}" if display_path.is_file() else filename
                         operator = (row.get("operator") or "").strip()
+                        type_codes = {
+                            code.strip().upper()
+                            for code in (row.get("type_codes") or "").split("|")
+                            if code.strip()
+                        }
                         aliases = [operator, *((row.get("operator_aliases") or "").split("|"))]
                         for alias in aliases:
                             key = normalise_airline(alias)
                             if key:
                                 airline_index.setdefault((family, key), []).append(served_filename)
                         file_operators[served_filename] = operator
+                        file_type_codes[served_filename] = type_codes
                         manifest.append({k: (v or "") for k, v in row.items()})
         self._index = index
         manifest_files = {row.get("file", "") for row in manifest}
@@ -160,6 +168,7 @@ class ArtworkIndex:
         }
         self._airline_index = airline_index
         self._file_operators = file_operators
+        self._file_type_codes = file_type_codes
         self._manifest = manifest
 
     @property
@@ -172,12 +181,20 @@ class ArtworkIndex:
         category: str,
         airlines: list[str | None] | None = None,
         seed: str | None = None,
+        type_code: str | None = None,
     ) -> dict[str, str | None]:
         """Poster-Treffer samt Qualitaet (Airline, Familie oder Platzhalter)."""
         rng = random.Random(seed) if seed else random
         for airline in airlines or []:
             airline_key = normalise_airline(airline)
             files = self._airline_index.get((slug, airline_key)) if airline_key else None
+            if files and type_code:
+                code = type_code.strip().upper()
+                files = [
+                    filename for filename in files
+                    if not self._file_type_codes.get(filename)
+                    or code in self._file_type_codes[filename]
+                ]
             if files:
                 filename = rng.choice(files)
                 return {
@@ -211,9 +228,16 @@ class ArtworkIndex:
         category: str,
         seed: str | None = None,
         airlines: list[str | None] | None = None,
+        type_code: str | None = None,
     ) -> str | None:
         """Kompatible Kurzform, wenn nur die URL benoetigt wird."""
-        return self.match(slug, category, airlines=airlines, seed=seed)["url"]
+        return self.match(
+            slug,
+            category,
+            airlines=airlines,
+            seed=seed,
+            type_code=type_code,
+        )["url"]
 
     def coverage(self) -> dict[str, Any]:
         """Welche Familien haben schon ein Bild, welche fehlen noch?"""

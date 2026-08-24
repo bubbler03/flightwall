@@ -10,6 +10,7 @@ from backend import store
 from backend.config import Config, Flights, Location
 from backend.flights.adsb import AdsbClient
 from backend.flights.artwork import ArtworkIndex
+from backend.flights import geo
 from backend.flights.service import FlightService
 from backend.hub import Hub
 
@@ -201,6 +202,58 @@ class ArtworkTests(unittest.TestCase):
             self.assertEqual(coverage["display_cutouts"], 1)
             self.assertEqual(coverage["families_with_art"], 1)
             self.assertEqual(coverage["files"], 1)
+
+    def test_type_code_prevents_wrong_subtype_livery(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            art_dir = Path(temp_dir)
+            display_dir = art_dir / "display"
+            display_dir.mkdir()
+            for filename in ("a321--sample-ceo.png", "a321--sample-neo.png"):
+                (display_dir / filename).write_bytes(b"display-cutout")
+            (art_dir / "manifest.tsv").write_text(
+                "file\tfamily\toperator\toperator_aliases\ttype_codes\n"
+                "a321--sample-ceo.png\ta321\tSample Air\tSample\tA321\n"
+                "a321--sample-neo.png\ta321\tSample Air\tSample\tA21N\n",
+                encoding="utf-8",
+            )
+
+            artwork = ArtworkIndex(art_dir)
+
+            ceo = artwork.match("a321", "narrowbody", ["Sample"], type_code="A321")
+            neo = artwork.match("a321", "narrowbody", ["Sample"], type_code="A21N")
+            unknown = artwork.match("a321", "narrowbody", ["Sample"], type_code="A320")
+
+            self.assertEqual(ceo["file"], "display/a321--sample-ceo.png")
+            self.assertEqual(neo["file"], "display/a321--sample-neo.png")
+            self.assertEqual(unknown["match"], "none")
+
+
+class RoutePlausibilityTests(unittest.TestCase):
+    def test_stale_milan_munich_route_is_rejected_over_braunschweig(self) -> None:
+        self.assertFalse(geo.route_position_plausible(
+            52.2044, 10.5241, 45.6306, 8.7281, 48.3538, 11.7861
+        ))
+
+    def test_gothenburg_frankfurt_route_is_plausible_over_braunschweig(self) -> None:
+        self.assertTrue(geo.route_position_plausible(
+            52.2044, 10.5241, 57.6628, 12.2798, 50.0379, 8.5622
+        ))
+
+    def test_route_filter_keeps_airline_but_hides_bad_airports(self) -> None:
+        ac = {"callsign": "DLH8VY", "lat": 52.2044, "lon": 10.5241}
+        route = {
+            "airline": {"name": "Lufthansa"},
+            "callsign_iata": "LH1857",
+            "origin": {"iata": "MXP", "lat": 45.6306, "lon": 8.7281},
+            "destination": {"iata": "MUC", "lat": 48.3538, "lon": 11.7861},
+        }
+
+        cleaned = FlightService._validated_route(ac, route)
+
+        self.assertEqual(cleaned["route_status"], "unverified")
+        self.assertEqual(cleaned["airline"]["name"], "Lufthansa")
+        self.assertNotIn("origin", cleaned)
+        self.assertNotIn("destination", cleaned)
 
 
 class AircraftCatalogTests(unittest.TestCase):
