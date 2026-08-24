@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import time
 import sqlite3
+import tempfile
 import unittest
+from pathlib import Path
 
 from backend import store
 from backend.config import Config, Flights, Location
@@ -176,6 +178,26 @@ class ArtworkTests(unittest.TestCase):
         self.assertEqual(cathay["match"], "airline")
         self.assertEqual(unknown["match"], "fallback")
         self.assertEqual(unknown["file"], "fallback-widebody-01.svg")
+
+    def test_display_cutout_works_without_unpublished_raw_master(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            art_dir = Path(temp_dir)
+            display_dir = art_dir / "display"
+            display_dir.mkdir()
+            filename = "b747--cathay-cargo-01.png"
+            (display_dir / filename).write_bytes(b"display-cutout")
+            (art_dir / "manifest.tsv").write_text(
+                "file\tfamily\toperator\toperator_aliases\n"
+                f"{filename}\tb747\tCathay Pacific Cargo\tCathay Cargo\n",
+                encoding="utf-8",
+            )
+
+            artwork = ArtworkIndex(art_dir)
+            cathay = artwork.match("b747", "widebody", ["Cathay Cargo"], "clean-clone")
+
+            self.assertEqual(cathay["file"], f"display/{filename}")
+            self.assertEqual(cathay["match"], "airline")
+            self.assertEqual(artwork.coverage()["display_cutouts"], 1)
 
 
 class AircraftCatalogTests(unittest.TestCase):

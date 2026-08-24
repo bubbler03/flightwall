@@ -134,9 +134,15 @@ class ArtworkIndex:
                     for row in csv.DictReader(handle, delimiter="\t"):
                         filename = (row.get("file") or "").strip()
                         family = (row.get("family") or "").strip().lower()
-                        if not filename or not family or not (self.art_dir / filename).is_file():
-                            continue
+                        source_path = self.art_dir / filename
                         display_path = self.art_dir / "display" / filename
+                        # Im oeffentlichen Repository liegen nur die fertig
+                        # freigestellten Display-Dateien. Die grossen Rohmaster
+                        # bleiben lokal und duerfen fuer einen Treffer daher
+                        # nicht zwingend erforderlich sein.
+                        has_artwork = source_path.is_file() or display_path.is_file()
+                        if not filename or not family or not has_artwork:
+                            continue
                         served_filename = f"display/{filename}" if display_path.is_file() else filename
                         operator = (row.get("operator") or "").strip()
                         aliases = [operator, *((row.get("operator_aliases") or "").split("|"))]
