@@ -72,6 +72,7 @@ def make_cutout(
     destination: Path,
     threshold: int = 72,
     preserve_alpha: bool = False,
+    interior_regions: tuple[tuple[int, int, int, int], ...] = (),
 ) -> None:
     original = Image.open(source).convert("RGBA")
     work = original.copy()
@@ -91,6 +92,19 @@ def make_cutout(
             pixel = work.getpixel(seed)
             if pixel[3] and looks_like_backdrop(pixel):
                 ImageDraw.floodfill(work, seed, (0, 0, 0, 0), thresh=threshold)
+
+        # Rotoren oder Streben koennen Hintergrundinseln vollstaendig
+        # einschliessen. Explizite Regionen erlauben deren Entfernung, ohne
+        # gleichfarbige Lackierung, Flaggen oder getoente Scheiben anzutasten.
+        for left, top, right, bottom in interior_regions:
+            region = work.crop((left, top, right, bottom))
+            pixels = list(region.get_flattened_data())
+            region.putdata([
+                (0, 0, 0, 0) if alpha and looks_like_backdrop((red, green, blue, alpha))
+                else (red, green, blue, alpha)
+                for red, green, blue, alpha in pixels
+            ])
+            work.paste(region, (left, top))
 
         alpha = keep_aircraft_component(work.getchannel("A"))
     # Ein sehr kleiner weicher Rand verhindert gezackte Kanten im Passepartout,
@@ -113,6 +127,16 @@ def make_cutout(
     work.save(destination, "PNG", optimize=True)
 
 
+def parse_region(value: str) -> tuple[int, int, int, int]:
+    try:
+        region = tuple(int(part) for part in value.split(","))
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("Region muss aus vier Ganzzahlen bestehen") from exc
+    if len(region) != 4 or region[0] >= region[2] or region[1] >= region[3]:
+        raise argparse.ArgumentTypeError("Region muss LEFT,TOP,RIGHT,BOTTOM sein")
+    return region
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
@@ -124,6 +148,14 @@ def parse_args() -> argparse.Namespace:
         "--preserve-alpha",
         action="store_true",
         help="vorhandene Transparenz bereinigen und zuschneiden, Hintergrund nicht neu entfernen",
+    )
+    parser.add_argument(
+        "--interior-region",
+        action="append",
+        type=parse_region,
+        default=[],
+        metavar="LEFT,TOP,RIGHT,BOTTOM",
+        help="rote Hintergrundinseln nur innerhalb dieser Master-Koordinaten entfernen",
     )
     return parser.parse_args()
 
@@ -140,7 +172,13 @@ def main() -> None:
 
     source = args.input.resolve()
     destination = args.output or (DISPLAY_DIR / source.name)
-    make_cutout(source, destination.resolve(), args.threshold, args.preserve_alpha)
+    make_cutout(
+        source,
+        destination.resolve(),
+        args.threshold,
+        args.preserve_alpha,
+        tuple(args.interior_region),
+    )
     print(destination)
 
 

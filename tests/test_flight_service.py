@@ -227,6 +227,33 @@ class ArtworkTests(unittest.TestCase):
             self.assertEqual(neo["file"], "display/a321--sample-neo.png")
             self.assertEqual(unknown["match"], "none")
 
+    def test_current_braunschweig_sighting_batch_has_exact_artwork(self) -> None:
+        artwork = ArtworkIndex()
+        cases = [
+            ("a319", "narrowbody", "Eurowings", "A319", "a319--eurowings-01.png"),
+            ("e190", "regional", "BA CityFlyer", "E190", "e190--ba-cityflyer-01.png"),
+            ("heli", "heli", "German Army", "EC35", "heli--german-army-01.png"),
+            ("c172", "ga", "Private", "P28A", "c172--private-pa28-01.png"),
+            ("b38m", "narrowbody", "LOT Polish Airlines", "B38M", "b38m--lot-polish-01.png"),
+            ("a320", "narrowbody", "British Airways", "A20N", "a320--british-airways-01.png"),
+            ("a321", "narrowbody", "British Airways", "A21N", "a321--british-airways-01.png"),
+            ("a319", "narrowbody", "Brussels Airlines", "A319", "a319--brussels-airlines-01.png"),
+            ("b738", "narrowbody", "TUIfly", "B738", "b738--tuifly-01.png"),
+            ("a350", "widebody", "Emirates", "A359", "a350--emirates-01.png"),
+        ]
+
+        for family, category, airline, type_code, filename in cases:
+            with self.subTest(airline=airline, type_code=type_code):
+                match = artwork.match(
+                    family,
+                    category,
+                    [airline],
+                    seed=f"{airline}-{type_code}",
+                    type_code=type_code,
+                )
+                self.assertEqual(match["match"], "airline")
+                self.assertEqual(match["file"], f"display/{filename}")
+
 
 class RoutePlausibilityTests(unittest.TestCase):
     def test_stale_milan_munich_route_is_rejected_over_braunschweig(self) -> None:

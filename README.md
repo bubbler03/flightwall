@@ -67,12 +67,15 @@ Nach Änderungen: `sudo systemctl restart flightwall`
 ## Die Flugzeugbilder
 
 Das Display sucht zu Typ **und Airline** (`B744` + Cathay Cargo, `A21N` +
-Lufthansa, …) ein passendes Bild in `frontend/art/`. 22 transparente Retro-
+Lufthansa, …) ein passendes Bild in `frontend/art/`. 40 transparente Retro-
 Freisteller sind bereits unter `frontend/art/display/` eingebunden; für noch nicht
 vorhandene Kombinationen bleibt bewusst die neutrale SVG-Silhouette sichtbar,
 damit nie eine falsche Lackierung erscheint.
 
-**Alle 30 Prompts stehen in [`tools/art_prompts.md`](tools/art_prompts.md).**
+**Die 30 generischen Basisprompts stehen in
+[`tools/art_prompts.md`](tools/art_prompts.md); konkrete Airline-/Typ-Motive sind
+mit ihrer Referenz in [`frontend/art/manifest.tsv`](frontend/art/manifest.tsv)
+dokumentiert.**
 
 Ablauf für neue Motive:
 
@@ -100,6 +103,9 @@ Das Skript entfernt ausschließlich die vom Bildrand zusammenhängende rote Flä
 schneidet transparente Ränder zu und bewahrt Lackierung, Logos und Retro-Raster.
 Für bereits transparent extrahierte Motive mit roter/oranger Lackierung bereinigt
 und beschneidet `--preserve-alpha` nur den vorhandenen Alphakanal.
+Bei Rotoren oder Fahrwerksstreben lassen sich zusätzlich eingeschlossene rote
+Hintergrundinseln gezielt mit wiederholbaren
+`--interior-region LEFT,TOP,RIGHT,BOTTOM`-Angaben entfernen.
 
 ---
 
