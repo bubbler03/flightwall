@@ -2,6 +2,9 @@
 Description=FlightWall - Cage-Kiosk auf %I
 After=network-online.target flightwall.service systemd-user-sessions.service
 Wants=network-online.target flightwall.service dbus.socket systemd-logind.service
+# Ein Backend-Restart stoppt zuerst den Browser samt SSE-Verbindung und
+# startet ihn danach automatisch wieder.
+PartOf=flightwall.service
 After=dbus.socket systemd-logind.service
 Before=graphical.target
 ConditionPathExists=/dev/tty0
