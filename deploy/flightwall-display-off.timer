@@ -1,0 +1,12 @@
+[Unit]
+Description=FlightWall - Display taeglich um 22:30 ausschalten
+
+[Timer]
+OnCalendar=*-*-* 22:30:00 Europe/Berlin
+Persistent=true
+AccuracySec=15s
+Unit=flightwall-display-off.service
+
+[Install]
+WantedBy=timers.target
+

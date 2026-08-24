@@ -11,7 +11,7 @@ echo "==> FlightWall wird eingerichtet in $PROJECT_DIR (Benutzer: $USER_NAME)"
 # --- Systempakete --------------------------------------------------------
 echo "==> Systempakete"
 sudo apt update
-sudo apt install -y python3-venv python3-dev curl
+sudo apt install -y python3-venv python3-dev curl ddcutil
 if apt-cache show chromium >/dev/null 2>&1; then
     sudo apt install -y chromium
 else
@@ -24,6 +24,10 @@ sudo install -m 644 deploy/chromium-policy.json \
     /etc/chromium/policies/managed/flightwall.json
 # lgpio wird fuer den Hardware-Knopf am Pi 5 gebraucht
 sudo apt install -y python3-lgpio || echo "   (python3-lgpio nicht verfuegbar - nur noetig fuer den Knopf)"
+
+# Der HDMI-DDC-Bus wird fuer das echte Ausschalten des Monitors gebraucht.
+echo i2c-dev | sudo tee /etc/modules-load.d/flightwall-ddc.conf >/dev/null
+sudo modprobe i2c-dev
 
 # --- Python-Umgebung -----------------------------------------------------
 echo "==> Python-Umgebung"
@@ -93,6 +97,16 @@ PAM
     sudo systemctl set-default graphical.target
     sudo systemctl enable --now flightwall-kiosk@tty7.service
 fi
+
+# --- Display-Zeitplan ----------------------------------------------------
+echo "==> Display-Zeitplan (taeglich 22:30)"
+sudo sed -e "s|/home/pi/flightwall|$PROJECT_DIR|g" \
+         deploy/flightwall-display-off.service | \
+    sudo tee /etc/systemd/system/flightwall-display-off.service >/dev/null
+sudo install -m 644 deploy/flightwall-display-off.timer \
+    /etc/systemd/system/flightwall-display-off.timer
+sudo systemctl daemon-reload
+sudo systemctl enable --now flightwall-display-off.timer
 
 echo
 echo "==> Fertig."

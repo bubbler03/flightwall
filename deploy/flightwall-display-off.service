@@ -1,0 +1,8 @@
+[Unit]
+Description=FlightWall - Display ausschalten
+After=flightwall-kiosk@tty7.service
+
+[Service]
+Type=oneshot
+ExecStart=/home/pi/flightwall/deploy/display-off.sh
+

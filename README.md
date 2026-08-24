@@ -198,6 +198,13 @@ wieder Daten kommen. Ein *leerer* Himmel bremst den Takt nicht.
 `systemctl status flightwall-kiosk@tty7` zusätzlich den HDMI-Kiosk. Dieser wartet,
 bis der Webdienst antwortet.
 
+**Display-Zeitplan** — der Installer richtet
+`flightwall-display-off.timer` ein. Er schaltet den ersten per DDC/CI erkannten
+Monitor täglich um 22:30 Uhr (Europe/Berlin) aus; Backend und Kiosk laufen weiter.
+Status und nächsten Lauf zeigt
+`systemctl status flightwall-display-off.timer`. Eine automatische Einschaltzeit
+ist absichtlich nicht hinterlegt.
+
 **Bilder erscheinen nicht** — Dateiname und passende Zeile in
 `frontend/art/manifest.tsv` prüfen. Danach `/api/art/refresh` aufrufen.
 
@@ -230,4 +237,5 @@ tools/
   make_fallback_art.py  erzeugt die Platzhalter-Silhouetten
 deploy/
   install.sh, flightwall.service, flightwall-kiosk@.service, kiosk.sh
+  flightwall-display-off.service, flightwall-display-off.timer, display-off.sh
 ```
