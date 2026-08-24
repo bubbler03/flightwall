@@ -17,6 +17,11 @@ if apt-cache show chromium >/dev/null 2>&1; then
 else
     sudo apt install -y chromium-browser
 fi
+# Kiosk-Browser ohne Uebersetzungs-/Werbe-Popups. Distributionen ignorieren
+# einzelne Chromium-Flags teilweise; die verwaltete Linux-Policy ist stabiler.
+sudo install -d -m 755 /etc/chromium/policies/managed
+sudo install -m 644 deploy/chromium-policy.json \
+    /etc/chromium/policies/managed/flightwall.json
 # lgpio wird fuer den Hardware-Knopf am Pi 5 gebraucht
 sudo apt install -y python3-lgpio || echo "   (python3-lgpio nicht verfuegbar - nur noetig fuer den Knopf)"
 

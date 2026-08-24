@@ -37,8 +37,10 @@ bash deploy/install.sh
 Das Skript legt die Python-Umgebung an, richtet den Systemd-Dienst ein und sorgt
 dafür, dass Chromium beim Booten im Vollbild startet. Auf einem schlanken Debian
 ohne Desktop installiert es dafür nur den kleinen Wayland-Kiosk Cage; vorhandene
-Desktop-Installationen verwenden weiter ihren normalen Autostart. Danach nur noch
-die Koordinaten in `config.yaml` eintragen und `sudo systemctl restart flightwall`.
+Desktop-Installationen verwenden weiter ihren normalen Autostart. Eine verwaltete
+Chromium-Policy verhindert Übersetzungs- und Werbeeinblendungen im Bilderrahmen.
+Danach nur noch die Koordinaten in `config.yaml` eintragen und
+`sudo systemctl restart flightwall`.
 
 ---
 
