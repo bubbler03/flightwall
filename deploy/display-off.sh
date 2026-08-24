@@ -7,8 +7,8 @@ if ! command -v ddcutil >/dev/null 2>&1; then
     exit 1
 fi
 
-# D6=05 ist laut MCCS der schreibgeschuetzte Befehl "Display ausschalten".
-# --noverify ist erforderlich, weil ein ausgeschaltetes Display nicht mehr auf
-# die anschliessende Ruecklesepruefung antwortet.
-ddcutil setvcp D6 05 --display 1 --noverify
-
+# D6=05 ist laut MCCS der Befehl "Display ausschalten". Fuer den systemd-Lauf
+# deaktivieren wir nur den nutzerspezifischen Cache; das LG-Display bestaetigt
+# den gesetzten Zustand weiterhin ueber DDC.
+export HOME="${HOME:-/root}"
+ddcutil --noconfig --disable-dynamic-sleep setvcp D6 05 --display 1
