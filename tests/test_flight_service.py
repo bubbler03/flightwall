@@ -289,6 +289,8 @@ class AircraftCatalogTests(unittest.TestCase):
         self.memory_connection = sqlite3.connect(":memory:")
         self.memory_connection.row_factory = sqlite3.Row
         self.original_connection.backup(self.memory_connection)
+        self.memory_connection.execute("DELETE FROM aircraft_models")
+        self.memory_connection.commit()
         store._conn = self.memory_connection
 
     def tearDown(self) -> None:
@@ -314,6 +316,26 @@ class AircraftCatalogTests(unittest.TestCase):
         self.assertEqual(row["airline"], "Cathay Pacific Cargo")
         self.assertEqual(row["sightings"], 1)
         self.assertEqual(row["needs_artwork"], 0)
+
+    def test_artwork_refresh_updates_stored_pair_without_new_sighting(self) -> None:
+        flight = {
+            "type_code": "A20N",
+            "art_family": "a320",
+            "display_operator": "British Airways",
+            "art_file": "fallback-narrowbody-01.svg",
+            "art_match": "fallback",
+        }
+        store.record_aircraft_model(flight)
+
+        service = FlightService(Config(), Hub(), FakeEnricher(), FakeClient({}))
+        coverage = service.refresh_artwork()
+        row = next(item for item in store.aircraft_model_catalog() if item["model_key"] == "A20N")
+
+        self.assertEqual(coverage["catalog_updated"], 1)
+        self.assertEqual(row["artwork_file"], "display/a320--british-airways-01.png")
+        self.assertEqual(row["artwork_match"], "airline")
+        self.assertEqual(row["needs_artwork"], 0)
+        self.assertEqual(row["sightings"], 1)
 
 
 if __name__ == "__main__":

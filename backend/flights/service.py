@@ -9,10 +9,16 @@ from typing import Any
 
 from ..config import Config
 from ..hub import Hub
-from ..store import record_aircraft_model, record_sighting, sighting_stats
+from ..store import (
+    aircraft_model_catalog,
+    record_aircraft_model,
+    record_sighting,
+    sighting_stats,
+    update_aircraft_model_artwork,
+)
 from . import geo
 from .adsb import AdsbClient, normalise
-from .artwork import ArtworkIndex, family_for
+from .artwork import FAMILIES, ArtworkIndex, family_for
 
 log = logging.getLogger(__name__)
 
@@ -321,14 +327,38 @@ class FlightService:
         return cleaned
 
     def refresh_artwork(self) -> dict[str, Any]:
-        """Manifest neu lesen und bereits sichtbare Flugzeuge sofort zuordnen."""
+        """Manifest neu lesen und sichtbare wie gespeicherte Modelle neu zuordnen."""
         self.artwork.refresh()
+
+        catalog_updates: list[tuple[str | None, str, str, str]] = []
+        for model in aircraft_model_catalog(limit=2000):
+            family = (model.get("family") or "").strip().lower()
+            type_code = (model.get("type_code") or "").strip().upper() or None
+            if family in FAMILIES:
+                category = FAMILIES[family][1]
+            else:
+                family, _, category = family_for(type_code)
+            match = self.artwork.match(
+                family,
+                category,
+                [model.get("airline")],
+                seed=f"catalog:{model.get('model_key')}:{model.get('airline_key')}",
+                type_code=type_code,
+            )
+            catalog_updates.append((
+                match["file"],
+                match["match"] or "none",
+                model["model_key"],
+                model["airline_key"],
+            ))
+        catalog_updated = update_aircraft_model_artwork(catalog_updates)
+
         for aircraft in self.fleet:
             self._assign_artwork(aircraft)
             record_aircraft_model(aircraft, count_sighting=False)
         self.hub.set_fleet(self.fleet)
         self.hub.set_flight(self.current)
-        return self.artwork.coverage()
+        return {**self.artwork.coverage(), "catalog_updated": catalog_updated}
 
     def status(self) -> dict[str, Any]:
         fleet_hexes = [aircraft.get("hex") for aircraft in self.fleet]

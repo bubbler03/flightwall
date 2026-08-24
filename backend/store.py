@@ -192,6 +192,28 @@ def aircraft_model_catalog(limit: int = 500) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
+def update_aircraft_model_artwork(
+    updates: list[tuple[str | None, str, str, str]],
+) -> int:
+    """Gespeicherte Modellpaare nach einem Manifest-Refresh neu markieren.
+
+    Jedes Tupel enthaelt ``(artwork_file, artwork_match, model_key,
+    airline_key)``. Sichtungszaehler und Zeitstempel bleiben unveraendert.
+    """
+    if not updates:
+        return 0
+    before = _conn.total_changes
+    _conn.executemany(
+        """UPDATE aircraft_models
+           SET artwork_file = ?, artwork_match = ?
+           WHERE model_key = ? AND airline_key = ?
+             AND (artwork_file IS NOT ? OR artwork_match != ?)""",
+        [(*update, update[0], update[1]) for update in updates],
+    )
+    _conn.commit()
+    return _conn.total_changes - before
+
+
 def _airline_name(value: Any) -> str | None:
     return value.get("name") if isinstance(value, dict) else value
 
