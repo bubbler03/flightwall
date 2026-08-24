@@ -35,6 +35,8 @@ exec "$BROWSER" \
     --kiosk \
     --no-first-run \
     --start-maximized \
+    --lang=de-DE \
+    --disable-translate \
     --noerrdialogs \
     --disable-infobars \
     --disable-session-crashed-bubble \
