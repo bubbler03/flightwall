@@ -33,6 +33,8 @@ BROWSER=$(command -v chromium-browser || command -v chromium || echo chromium)
 
 exec "$BROWSER" \
     --kiosk \
+    --no-first-run \
+    --start-maximized \
     --noerrdialogs \
     --disable-infobars \
     --disable-session-crashed-bubble \

@@ -1,0 +1,36 @@
+[Unit]
+Description=FlightWall - Cage-Kiosk auf %I
+After=network-online.target flightwall.service systemd-user-sessions.service
+Wants=network-online.target flightwall.service dbus.socket systemd-logind.service
+After=dbus.socket systemd-logind.service
+Before=graphical.target
+ConditionPathExists=/dev/tty0
+Conflicts=getty@%i.service
+After=getty@%i.service
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/flightwall
+Environment="FLIGHTWALL_URL=http://localhost:8000"
+# Auch ohne Maus oder Tastatur darf der reine HDMI-Kiosk starten.
+Environment="WLR_LIBINPUT_NO_DEVICES=1"
+ExecStart=/usr/bin/cage -- /home/pi/flightwall/deploy/kiosk.sh
+ExecStartPost=+/bin/sh -c 'tty_name="%i"; exec /usr/bin/chvt "$${tty_name#tty}"'
+Restart=always
+RestartSec=5
+UtmpIdentifier=%I
+UtmpMode=user
+TTYPath=/dev/%I
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+StandardInput=tty-fail
+StandardOutput=journal
+StandardError=journal
+PAMName=flightwall-kiosk
+
+[Install]
+WantedBy=graphical.target
+DefaultInstance=tty7

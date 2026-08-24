@@ -35,8 +35,10 @@ bash deploy/install.sh
 ```
 
 Das Skript legt die Python-Umgebung an, richtet den Systemd-Dienst ein und sorgt
-dafür, dass Chromium beim Booten im Vollbild startet. Danach nur noch die
-Koordinaten in `config.yaml` eintragen und `sudo systemctl restart flightwall`.
+dafür, dass Chromium beim Booten im Vollbild startet. Auf einem schlanken Debian
+ohne Desktop installiert es dafür nur den kleinen Wayland-Kiosk Cage; vorhandene
+Desktop-Installationen verwenden weiter ihren normalen Autostart. Danach nur noch
+die Koordinaten in `config.yaml` eintragen und `sudo systemctl restart flightwall`.
 
 ---
 
@@ -180,8 +182,9 @@ nach — bis zu einmal alle fünf Minuten — und kehrt zum normalen Takt zurüc
 wieder Daten kommen. Ein *leerer* Himmel bremst den Takt nicht.
 
 **Display bleibt schwarz** — `journalctl -u flightwall -f` zeigt den Dienst,
-`systemctl status flightwall` den Zustand. Der Kiosk startet erst, wenn der Dienst
-antwortet.
+`systemctl status flightwall` den Zustand. Auf einer Headless-Installation zeigt
+`systemctl status flightwall-kiosk@tty7` zusätzlich den HDMI-Kiosk. Dieser wartet,
+bis der Webdienst antwortet.
 
 **Bilder erscheinen nicht** — Dateiname und passende Zeile in
 `frontend/art/manifest.tsv` prüfen. Danach `/api/art/refresh` aufrufen.
@@ -214,5 +217,5 @@ tools/
   art_prompts.md        die 30 Bild-Prompts
   make_fallback_art.py  erzeugt die Platzhalter-Silhouetten
 deploy/
-  install.sh, flightwall.service, kiosk.sh
+  install.sh, flightwall.service, flightwall-kiosk@.service, kiosk.sh
 ```
