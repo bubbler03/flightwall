@@ -16,7 +16,7 @@ done
 # Bildschirmschoner und Energiesparen aus
 if command -v wlr-randr >/dev/null 2>&1; then
     :   # Wayland: uebernimmt der Compositor
-elif command -v xset >/dev/null 2>&1; then
+elif [ -z "${WAYLAND_DISPLAY:-}" ] && command -v xset >/dev/null 2>&1; then
     xset s off
     xset -dpms
     xset s noblank
